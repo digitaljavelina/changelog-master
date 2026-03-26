@@ -54,7 +54,9 @@ export function MattersView({
       const res = await fetch(`/api/analysis/${encodeURIComponent(version)}`);
       if (res.ok) {
         const data = await res.json();
-        setHistoricalAnalysis(data.analysis);
+        // Handle both array and object formats
+        const analysis = Array.isArray(data.analysis) ? data.analysis[0] : data.analysis;
+        setHistoricalAnalysis(analysis);
         setSelectedVersion(version);
       }
     } catch (error) {
@@ -100,23 +102,26 @@ export function MattersView({
     );
   }
 
+  const categories = displayAnalysis?.categories || {};
+  const actionItems = displayAnalysis?.action_items || [];
+
   const getFullAnalysisText = () => {
-    let text = `Here's what matters in the latest Claude Code release. ${displayAnalysis.tldr}. `;
+    let text = `Here's what matters in the latest Claude Code release. ${displayAnalysis?.tldr || ''}. `;
 
-    if (displayAnalysis.categories.critical_breaking_changes.length > 0) {
-      text += `Critical breaking changes: ${displayAnalysis.categories.critical_breaking_changes.join('. ')}. `;
+    if (categories.critical_breaking_changes?.length > 0) {
+      text += `Critical breaking changes: ${categories.critical_breaking_changes.join('. ')}. `;
     }
 
-    if (displayAnalysis.categories.major_features.length > 0) {
-      text += `Major new features: ${displayAnalysis.categories.major_features.join('. ')}. `;
+    if (categories.major_features?.length > 0) {
+      text += `Major new features: ${categories.major_features.join('. ')}. `;
     }
 
-    if (displayAnalysis.categories.important_fixes.length > 0) {
-      text += `Important fixes: ${displayAnalysis.categories.important_fixes.join('. ')}. `;
+    if (categories.important_fixes?.length > 0) {
+      text += `Important fixes: ${categories.important_fixes.join('. ')}. `;
     }
 
-    if (displayAnalysis.action_items.length > 0) {
-      text += `Action items for you: ${displayAnalysis.action_items.join('. ')}`;
+    if (actionItems.length > 0) {
+      text += `Action items for you: ${actionItems.join('. ')}`;
     }
 
     return text;
@@ -175,7 +180,7 @@ export function MattersView({
           <div className="relative">
             <button
               onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
-              className="flex items-center gap-2 px-4 py-2 bg-cream-100 dark:bg-charcoal-700 rounded-xl border border-cream-300 dark:border-charcoal-500 text-charcoal-700 dark:text-cream-200 hover:bg-cream-200 dark:hover:bg-charcoal-600 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-cream-100 dark:bg-charcoal-700 rounded-xl border border-cream-300 dark:border-charcoal-500 text-charcoal-700 dark:text-gray-200 hover:bg-cream-200 dark:hover:bg-charcoal-600 transition-colors"
             >
               <History className="w-4 h-4" />
               <span className="text-sm font-medium">
@@ -196,7 +201,7 @@ export function MattersView({
                     className={`w-full px-4 py-3 text-left text-sm flex items-center justify-between transition-colors ${
                       !isViewingHistory
                         ? 'bg-coral-400/20 dark:bg-coral-600/20 text-coral-700 dark:text-coral-400'
-                        : 'hover:bg-cream-100 dark:hover:bg-charcoal-600 text-charcoal-700 dark:text-cream-200'
+                        : 'hover:bg-cream-100 dark:hover:bg-charcoal-600 text-charcoal-700 dark:text-gray-200'
                     }`}
                   >
                     <span className="font-medium">Current Analysis</span>
@@ -211,7 +216,7 @@ export function MattersView({
                       className={`w-full px-4 py-3 text-left text-sm flex items-center justify-between transition-colors ${
                         selectedVersion === item.version
                           ? 'bg-coral-400/20 dark:bg-coral-600/20 text-coral-700 dark:text-coral-400'
-                          : 'hover:bg-cream-100 dark:hover:bg-charcoal-600 text-charcoal-700 dark:text-cream-200'
+                          : 'hover:bg-cream-100 dark:hover:bg-charcoal-600 text-charcoal-700 dark:text-gray-200'
                       } disabled:opacity-50`}
                     >
                       <span className="font-medium truncate">{item.version}</span>
@@ -288,11 +293,11 @@ export function MattersView({
           </div>
 
           {/* Critical Breaking Changes */}
-          {displayAnalysis.categories.critical_breaking_changes.length > 0 && (
+          {categories.critical_breaking_changes?.length > 0 && (
             <Section
               title="Critical Breaking Changes"
               icon={<AlertTriangle className="w-5 h-5" />}
-              items={displayAnalysis.categories.critical_breaking_changes}
+              items={categories.critical_breaking_changes}
               color="red"
               onAudio={(text) => handleAudioClick(text, 'breaking')}
               isGenerating={generatingAudioFor === 'breaking'}
@@ -301,14 +306,14 @@ export function MattersView({
           )}
 
           {/* Removals */}
-          {displayAnalysis.categories.removals.length > 0 && (
+          {categories.removals?.length > 0 && (
             <div className="p-4 border-l-4 border-coral-500 bg-coral-400/10 dark:bg-coral-600/10 rounded-r-xl">
               <div className="flex items-center gap-2 mb-3">
                 <AlertCircle className="w-5 h-5 text-coral-600 dark:text-coral-400" />
                 <h3 className="font-semibold text-coral-700 dark:text-coral-400">Removals</h3>
               </div>
               <ul className="space-y-2">
-                {displayAnalysis.categories.removals.map((removal, idx) => (
+                {categories.removals?.map((removal, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <span
                       className={`px-2 py-0.5 text-xs rounded-lg ${
@@ -322,8 +327,8 @@ export function MattersView({
                       {removal.severity}
                     </span>
                     <div>
-                      <span className="font-medium text-charcoal-900 dark:text-cream-50">{removal.feature}</span>
-                      <span className="text-charcoal-600 dark:text-cream-300"> — {removal.why}</span>
+                      <span className="font-medium text-charcoal-900 dark:text-white">{removal.feature}</span>
+                      <span className="text-charcoal-600 dark:text-gray-300"> — {removal.why}</span>
                     </div>
                   </li>
                 ))}
@@ -332,11 +337,11 @@ export function MattersView({
           )}
 
           {/* Major Features */}
-          {displayAnalysis.categories.major_features.length > 0 && (
+          {categories.major_features?.length > 0 && (
             <Section
               title="Major Features"
               icon={<Sparkles className="w-5 h-5" />}
-              items={displayAnalysis.categories.major_features}
+              items={categories.major_features}
               color="teal"
               onAudio={(text) => handleAudioClick(text, 'features')}
               isGenerating={generatingAudioFor === 'features'}
@@ -345,11 +350,11 @@ export function MattersView({
           )}
 
           {/* Important Fixes */}
-          {displayAnalysis.categories.important_fixes.length > 0 && (
+          {categories.important_fixes?.length > 0 && (
             <Section
               title="Important Fixes"
               icon={<Wrench className="w-5 h-5" />}
-              items={displayAnalysis.categories.important_fixes}
+              items={categories.important_fixes}
               color="gray"
               onAudio={(text) => handleAudioClick(text, 'fixes')}
               isGenerating={generatingAudioFor === 'fixes'}
@@ -358,11 +363,11 @@ export function MattersView({
           )}
 
           {/* New Slash Commands */}
-          {displayAnalysis.categories.new_slash_commands.length > 0 && (
+          {categories.new_slash_commands?.length > 0 && (
             <Section
               title="New Slash Commands"
               icon={<Slash className="w-5 h-5" />}
-              items={displayAnalysis.categories.new_slash_commands}
+              items={categories.new_slash_commands}
               color="purple"
               onAudio={(text) => handleAudioClick(text, 'commands')}
               isGenerating={generatingAudioFor === 'commands'}
@@ -371,11 +376,11 @@ export function MattersView({
           )}
 
           {/* Terminal Improvements */}
-          {displayAnalysis.categories.terminal_improvements.length > 0 && (
+          {categories.terminal_improvements?.length > 0 && (
             <Section
               title="Terminal Improvements"
               icon={<Terminal className="w-5 h-5" />}
-              items={displayAnalysis.categories.terminal_improvements}
+              items={categories.terminal_improvements}
               color="blue"
               onAudio={(text) => handleAudioClick(text, 'terminal')}
               isGenerating={generatingAudioFor === 'terminal'}
@@ -384,11 +389,11 @@ export function MattersView({
           )}
 
           {/* API Changes */}
-          {displayAnalysis.categories.api_changes.length > 0 && (
+          {categories.api_changes?.length > 0 && (
             <Section
               title="API Changes"
               icon={<Code className="w-5 h-5" />}
-              items={displayAnalysis.categories.api_changes}
+              items={categories.api_changes}
               color="indigo"
               onAudio={(text) => handleAudioClick(text, 'api')}
               isGenerating={generatingAudioFor === 'api'}
@@ -397,12 +402,12 @@ export function MattersView({
           )}
 
           {/* Action Items */}
-          {displayAnalysis.action_items.length > 0 && (
+          {actionItems.length > 0 && (
             <div className="p-4 bg-cream-100 dark:bg-charcoal-700 rounded-xl border border-cream-300 dark:border-charcoal-500">
-              <h3 className="font-semibold text-charcoal-900 dark:text-cream-50 mb-3">Action Items</h3>
+              <h3 className="font-semibold text-charcoal-900 dark:text-white mb-3">Action Items</h3>
               <ul className="space-y-2">
-                {displayAnalysis.action_items.map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-2 text-charcoal-700 dark:text-cream-200">
+                {actionItems.map((item, idx) => (
+                  <li key={idx} className="flex items-start gap-2 text-charcoal-700 dark:text-gray-200">
                     <span className="text-coral-500 mt-0.5">—</span>
                     <span>{item}</span>
                   </li>
@@ -427,18 +432,17 @@ interface SectionProps {
 }
 
 function Section({ title, icon, items, color, onAudio, isGenerating, isPlaying }: SectionProps) {
-  const colorClasses = {
-    red: 'border-coral-600 bg-coral-500/10 dark:bg-coral-600/10 text-coral-600 dark:text-coral-400',
-    orange: 'border-coral-500 bg-coral-400/10 dark:bg-coral-500/10 text-coral-500 dark:text-coral-400',
-    teal: 'border-teal-500 bg-teal-500/10 dark:bg-teal-600/10 text-teal-600 dark:text-teal-400',
-    gray: 'border-charcoal-400 bg-cream-100 dark:bg-charcoal-700 text-charcoal-500 dark:text-cream-300',
-    purple: 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
-    blue: 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400',
-    indigo: 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400',
+  const colorConfig = {
+    red: { border: 'border-coral-600', bg: 'bg-coral-500/10 dark:bg-coral-600/10', text: 'text-coral-600 dark:text-coral-400' },
+    orange: { border: 'border-coral-500', bg: 'bg-coral-400/10 dark:bg-coral-500/10', text: 'text-coral-500 dark:text-coral-400' },
+    teal: { border: 'border-teal-500', bg: 'bg-teal-500/10 dark:bg-teal-600/10', text: 'text-teal-600 dark:text-teal-400' },
+    gray: { border: 'border-gray-400', bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-600 dark:text-gray-300' },
+    purple: { border: 'border-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20', text: 'text-purple-600 dark:text-purple-400' },
+    blue: { border: 'border-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-600 dark:text-blue-400' },
+    indigo: { border: 'border-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20', text: 'text-indigo-600 dark:text-indigo-400' },
   };
 
-  const classes = colorClasses[color];
-  const [borderColor, bgColor, textColor] = classes.split(' ');
+  const { border: borderColor, bg: bgColor, text: textColor } = colorConfig[color];
 
   const sectionText = `${title}: ${items.join('. ')}`;
 
@@ -447,7 +451,7 @@ function Section({ title, icon, items, color, onAudio, isGenerating, isPlaying }
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className={textColor}>{icon}</span>
-          <h3 className="font-semibold text-charcoal-900 dark:text-cream-50">{title}</h3>
+          <h3 className="font-semibold text-charcoal-900 dark:text-white">{title}</h3>
         </div>
         {onAudio && (
           <button
@@ -472,8 +476,8 @@ function Section({ title, icon, items, color, onAudio, isGenerating, isPlaying }
       </div>
       <ul className="space-y-1">
         {items.map((item, idx) => (
-          <li key={idx} className="text-charcoal-700 dark:text-cream-200 flex items-start gap-2">
-            <span className="text-charcoal-400 dark:text-cream-400">•</span>
+          <li key={idx} className="text-charcoal-700 dark:text-gray-200 flex items-start gap-2">
+            <span className="text-charcoal-400 dark:text-gray-400">•</span>
             <span>{item}</span>
           </li>
         ))}

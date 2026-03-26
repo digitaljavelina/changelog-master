@@ -1,7 +1,10 @@
 services:
   changelog-master:
-    build: .
-    container_name: changelog-master
+    build:
+      context: .
+      args:
+        - VITE_GEMINI_API_KEY=${VITE_GEMINI_API_KEY}
+    container_name: changelog
     restart: unless-stopped
     ports:
       - "3001:3001"
@@ -12,6 +15,12 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
+    networks:
+      - homelab-network
 
 volumes:
   changelog-data:
+
+networks:
+  homelab-network:
+    external: true

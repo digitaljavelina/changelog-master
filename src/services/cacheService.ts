@@ -7,7 +7,9 @@ export async function getCachedAnalysis(versionHash: string): Promise<GeminiAnal
     if (!response.ok) return null;
 
     const data = await response.json();
-    return data.analysis;
+    // Handle both array and object formats for backward compatibility
+    const analysis = Array.isArray(data.analysis) ? data.analysis[0] : data.analysis;
+    return analysis;
   } catch {
     return null;
   }
