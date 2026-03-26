@@ -1,0 +1,17 @@
+services:
+  changelog-master:
+    build: .
+    container_name: changelog-master
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    volumes:
+      - changelog-data:/app/data
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+
+volumes:
+  changelog-data:
